@@ -30,11 +30,11 @@ export class PostsController {
   @Post()
   @UseGuards(AccessTokenGuard)
   postPosts(
-    @UserDecorator() user: User,
+    @UserDecorator('id') user: number,
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
-    return this.postsService.createPost(user.id, title, content);
+    return this.postsService.createPost(user, title, content);
   }
 
   @Put(':id')
