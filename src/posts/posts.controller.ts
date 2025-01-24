@@ -12,6 +12,7 @@ import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
 import { AccessTokenGuard } from '../auth/guards/bearer-token.guard';
 import { UserDecorator } from '../user/decorators/user.decorator';
 import { User } from '../user/entities/user.entity';
+import { CreatePostDto } from './dto/create-post';
 
 @Controller('posts')
 export class PostsController {
@@ -31,10 +32,9 @@ export class PostsController {
   @UseGuards(AccessTokenGuard)
   postPosts(
     @UserDecorator('id') user: number,
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body() body: CreatePostDto,
   ) {
-    return this.postsService.createPost(user, title, content);
+    return this.postsService.createPost(user, body);
   }
 
   @Put(':id')
