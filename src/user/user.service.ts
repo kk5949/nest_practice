@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import { RegisterUserDto } from '../auth/dto/register-user.dto';
 
 @Injectable()
 export class UserService {
@@ -43,7 +44,7 @@ export class UserService {
     });
   }
 
-  async createUser(user: Pick<User, 'nickname' | 'email' | 'password'>) {
+  async createUser(user: RegisterUserDto) {
     const uniqueNickname = await this.userRepository.exists({
       where: {
         nickname: user.nickname,

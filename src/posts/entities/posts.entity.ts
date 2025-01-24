@@ -6,6 +6,8 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { TimestampModel } from '../../timestamp/entities/timestamp.entity';
+import { IsString } from 'class-validator';
+import { stringValidationMessage } from '../../common/validation-message/string-validation.message';
 
 @Entity()
 export class PostsModel extends TimestampModel {
@@ -20,9 +22,15 @@ export class PostsModel extends TimestampModel {
   user: User;
 
   @Column()
+  @IsString({
+    message: stringValidationMessage,
+  })
   title: string;
 
   @Column()
+  @IsString({
+    message: stringValidationMessage,
+  })
   content: string;
 
   @Column()

@@ -14,6 +14,7 @@ import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
 import { HASH_ROUNDS, JWT_SECRET } from './const/auth.const';
 import * as bcrypt from 'bcrypt';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +50,7 @@ export class AuthService {
     return this.loginUser(existUser);
   }
 
-  async registerWithEmail(user: Pick<User, 'email' | 'nickname' | 'password'>) {
+  async registerWithEmail(user: RegisterUserDto) {
     const hash = await bcrypt.hash(user.password, HASH_ROUNDS);
 
     const newFace = await this.userService.createUser({
