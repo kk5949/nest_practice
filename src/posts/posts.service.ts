@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
+import { PaginatePostDto } from './dto/paginate-post.dto';
+import { PROTOCOL,HOST } from '../common/env.const';
 
 @Injectable()
 export class PostsService {
@@ -16,6 +18,45 @@ export class PostsService {
     return this.postsRepository.find({
       relations: ['user'],
     });
+  }
+
+  /**
+   * 커서 방식의 페이지네이션
+   */
+  async paginatePosts(dto: PaginatePostDto) {
+    const posts = await this.postsRepository.find({
+      where: {
+        // dto.where__id_more_than 보다 큰 id 찾기
+        id: MoreThan((dto.where__id_more_than)),
+      },
+      order: {
+        // dto.order__createdAt 로 정렬
+        createdAt: dto.order__createdAt,
+      },
+      take: dto.take,
+    });
+
+    const lastPost = posts.length > 0 ? posts[posts.length - 1] : null;
+    const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}`);
+
+    if(nextUrl){
+      // dto 의 값들을 추출하여 query string 생성하기
+      for(const key of Object.keys(dto)){
+        if(key !== 'where__id_more_than'){
+          nextUrl.searchParams.append(key, dto[key]);
+        }
+      }
+      nextUrl.searchParams.append('where__id_more_than', lastPost.id.toString());
+    }
+
+    return {
+      data:posts,
+      count:posts.length,
+      cursor: {
+        after: lastPost?.id
+      },
+      next: nextUrl?.toString(),
+    }
   }
 
   async getPostById(id: string) {

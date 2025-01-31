@@ -1,14 +1,13 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
@@ -16,6 +15,7 @@ import { AccessTokenGuard } from '../auth/guards/bearer-token.guard';
 import { UserDecorator } from '../user/decorators/user.decorator';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
+import { PaginatePostDto } from './dto/paginate-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -26,8 +26,12 @@ export class PostsController {
    * serialization -> 직렬화 -> Nestjs 에서 사용하는 데이터 구조를 다른시스템에서도 쉽게 사용 가능하도록 포맷 변환
    * deserialization -> 역직렬화
    */
-  getPosts() {
-    return this.postsService.getAllPosts();
+  getPosts(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Query() body: PaginatePostDto,
+  ) {
+    // return this.postsService.getAllPosts();
+    return this.postsService.paginatePosts(body);
   }
 
   @Get(':id')
