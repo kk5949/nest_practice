@@ -9,6 +9,7 @@ import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { TimestampModule } from './timestamp/timestamp.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     UserModule,
     AuthModule,
     TimestampModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [

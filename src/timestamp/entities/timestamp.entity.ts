@@ -1,6 +1,9 @@
-import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 export abstract class TimestampModel {
+  @PrimaryGeneratedColumn()
+  id: number | string;
+
   @UpdateDateColumn()
   updatedAt: Date;
 

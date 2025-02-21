@@ -5,13 +5,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { PROTOCOL,HOST } from '../common/env.const';
+import { PROTOCOL, HOST } from '../common/const/env.const';
+import { CommonService } from '../common/common.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
+    private readonly commonService: CommonService
   ) {}
 
   async getAllPosts() {
@@ -24,35 +26,31 @@ export class PostsService {
    * 커서 방식의 페이지네이션
    */
   async paginatePosts(dto: PaginatePostDto) {
-    if(dto.page){
-      return this.pagePaginatePosts(dto);
-    }else{
-      return this.cursorPaginatePosts(dto);
-    }
+    return this.commonService.paginate(dto, this.postsRepository, {}, 'posts');
   }
 
   async pagePaginatePosts(dto: PaginatePostDto) {
     const [posts, count] = await this.postsRepository.findAndCount({
       skip: (dto.page - 1) * dto.take,
       take: dto.take,
-      order:{
-        createdAt: dto.order__createdAt
-      }
-    })
+      order: {
+        createdAt: dto.order__createdAt,
+      },
+    });
 
     return {
-      data:posts,
-      total:count,
-    }
+      data: posts,
+      total: count,
+    };
   }
 
   async cursorPaginatePosts(dto: PaginatePostDto) {
     const where: FindOptionsWhere<PostsModel> = {};
 
-    if(dto.where__id_less_than){
-      where.id = LessThan(dto.where__id_less_than);
-    }else if(dto.where__id_more_than){
-      where.id = MoreThan(dto.where__id_more_than);
+    if (dto.where__id__less_than) {
+      where.id = LessThan(dto.where__id__less_than);
+    } else if (dto.where__id__more_than) {
+      where.id = MoreThan(dto.where__id__more_than);
     }
 
     const posts = await this.postsRepository.find({
@@ -67,28 +65,34 @@ export class PostsService {
     const lastPost = posts.length > 0 && posts.length === dto.take ? posts[posts.length - 1] : null;
     const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}`);
 
-    if(nextUrl){
+    if (nextUrl) {
       // dto 의 값들을 추출하여 query string 생성하기
-      for(const key of Object.keys(dto)){
-        if(key !== 'where__id_more_than' && key !== 'where__id_less_than'){
+      for (const key of Object.keys(dto)) {
+        if (key !== 'where__id__more_than' && key !== 'where__id__less_than') {
           nextUrl.searchParams.append(key, dto[key]);
         }
       }
-      if(dto.order__createdAt === 'ASC'){
-        nextUrl.searchParams.append('where__id_more_than', lastPost.id.toString());
-      }else{
-        nextUrl.searchParams.append('where__id_less_than', lastPost.id.toString());
+      if (dto.order__createdAt === 'ASC') {
+        nextUrl.searchParams.append(
+          'where__id__more_than',
+          lastPost.id.toString(),
+        );
+      } else {
+        nextUrl.searchParams.append(
+          'where__id__less_than',
+          lastPost.id.toString(),
+        );
       }
     }
 
     return {
-      data:posts,
-      count:posts.length,
+      data: posts,
+      count: posts.length,
       cursor: {
-        after: lastPost?.id ?? null
+        after: lastPost?.id ?? null,
       },
       next: nextUrl?.toString() ?? null,
-    }
+    };
   }
 
   async getPostById(id: string) {
