@@ -97,3 +97,22 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+
+## TODO Practice List
+- Config Module 적용
+- File Uploader
+- DB Transaction
+- Interceptor 적용
+- Exception Filter 
+- Middleware 
+- Socket IO
+- Custom Auth Guard 
+- User Follow system 개발
+
+## Custom 추가개발
+- DB Migration 작성
+  - TypeORM 의 syncronize 옵션을 false 로 변경하고, migration 작성
+- 1:1 채팅방
+- Ip Block Middleware 개발
+- Jest Test 적용
