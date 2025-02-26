@@ -129,10 +129,13 @@ export class CommonService {
       options[field] = value;
     }else{
       const [_, field, operator] = split;
-      // Between 같은 경우에는 value가 값이 2개이기 때문에 예외처리
-      const values = value.toString().split(',');
       if(operator === 'between'){
+        // Between 같은 경우에는 value가 값이 2개이기 때문에 예외처리
+        const values = Array.isArray(value) ? value : value.toString().split(',');
         options[field] = FILTER_MAPPER[operator](values[0], values[1]);
+      }else if(operator === 'i_like'){
+        const searchValue = Array.isArray(value) ? value[0] : value;
+        options[field] = FILTER_MAPPER[operator](`%${searchValue}%`);
       }else{
         options[field] = FILTER_MAPPER[operator](value);
       }

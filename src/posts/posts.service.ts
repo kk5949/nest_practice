@@ -26,7 +26,9 @@ export class PostsService {
    * 커서 방식의 페이지네이션
    */
   async paginatePosts(dto: PaginatePostDto) {
-    return this.commonService.paginate(dto, this.postsRepository, {}, 'posts');
+    return this.commonService.paginate(dto, this.postsRepository, {
+      relations: ['user'],
+    }, 'posts');
   }
 
   async pagePaginatePosts(dto: PaginatePostDto) {

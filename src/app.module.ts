@@ -23,6 +23,7 @@ import { CommonModule } from './common/common.module';
       database: 'postgres',
       entities: [PostsModel, User],
       synchronize: true,
+      // logging: true,
     }),
     UserModule,
     AuthModule,
