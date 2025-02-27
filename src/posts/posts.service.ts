@@ -5,15 +5,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { PROTOCOL, HOST } from '../common/const/env.const';
 import { CommonService } from '../common/common.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
-    private readonly commonService: CommonService
+    private readonly commonService: CommonService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getAllPosts() {
@@ -64,6 +65,8 @@ export class PostsService {
       take: dto.take,
     });
 
+    const PROTOCOL = this.configService.get<string>('PROTOCOL');
+    const HOST = this.configService.get<string>('HOST');
     const lastPost = posts.length > 0 && posts.length === dto.take ? posts[posts.length - 1] : null;
     const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}`);
 
