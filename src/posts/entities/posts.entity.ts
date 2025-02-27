@@ -33,6 +33,12 @@ export class PostsModel extends TimestampModel {
   })
   content: string;
 
+  @Column({
+    nullable: true,
+    type: 'text',
+  })
+  image?: string;
+
   @Column()
   likeCount: number;
 
