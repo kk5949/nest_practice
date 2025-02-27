@@ -100,7 +100,7 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
 
 ## TODO Practice List
-- Config Module 적용
+- ~~Config Module 적용~~
 - File Uploader
 - DB Transaction
 - Interceptor 적용
@@ -116,3 +116,4 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - 1:1 채팅방
 - Ip Block Middleware 개발
 - Jest Test 적용
+

@@ -12,15 +12,16 @@ import {
 } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
-import { HASH_ROUNDS, JWT_SECRET } from './const/auth.const';
 import * as bcrypt from 'bcrypt';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -51,7 +52,7 @@ export class AuthService {
   }
 
   async registerWithEmail(user: RegisterUserDto) {
-    const hash = await bcrypt.hash(user.password, HASH_ROUNDS);
+    const hash = await bcrypt.hash(user.password, this.configService.get<string>('HASH_ROUNDS'));
 
     const newFace = await this.userService.createUser({
       ...user,
@@ -73,7 +74,7 @@ export class AuthService {
     };
 
     return this.jwtService.sign(payload, {
-      secret: JWT_SECRET,
+      secret: this.configService.get('JWT_SECRET'),
       expiresIn: isRefresh ? '1h' : '30m',
     });
   }
@@ -137,7 +138,7 @@ export class AuthService {
   verifyToken(token: string) {
     try {
       return this.jwtService.verify(token, {
-        secret: JWT_SECRET,
+        secret: this.configService.get<string>('JWT_SECRET'),
       });
     } catch (error) {
       if (error instanceof TokenExpiredError) {
@@ -159,7 +160,7 @@ export class AuthService {
    */
   rotateToken(token: string, isRefresh: boolean) {
     const decoded = this.jwtService.verify(token, {
-      secret: JWT_SECRET,
+      secret: this.configService.get<string>('JWT_SECRET'),
     });
 
     if (decoded.type !== 'refresh') {

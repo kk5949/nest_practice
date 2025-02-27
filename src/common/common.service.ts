@@ -3,10 +3,14 @@ import { TimestampModel } from '../timestamp/entities/timestamp.entity';
 import { BasePaginationDto } from './dto/base-pagination.dto';
 import { FindManyOptions, FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 import { FILTER_MAPPER } from './const/filter-mapper.const';
-import { HOST, PROTOCOL } from './const/env.const';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CommonService {
+
+  constructor(
+    private readonly configService: ConfigService,
+  ) {}
 
   paginate<T extends TimestampModel>(
     dto: BasePaginationDto,
@@ -53,6 +57,8 @@ export class CommonService {
       ...overrideOptions,
     })
 
+    const PROTOCOL = this.configService.get<string>('PROTOCOL');
+    const HOST = this.configService.get<string>('HOST');
     const lastItem= results.length > 0 && results.length === dto.take ? results[results.length - 1] : null;
     const nextUrl = lastItem && new URL(`${PROTOCOL}://${HOST}/${path}`);
 
