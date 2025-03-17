@@ -42,21 +42,19 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
-  @UseInterceptors(FileInterceptor('image'))
-  postPosts(
+  async postPosts(
     @UserDecorator('id') user: number,
     @Body() body: CreatePostDto,
-    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.postsService.createPost(user, body, file.filename);
+    await this.postsService.createPostImage(body);
+
+    return this.postsService.createPost(user, body);
   }
 
   @Patch(':id')
   patchPost(
     @Param('id', ParseBigintPipe) id: string,
     @Body() body: UpdatePostDto,
-    // @Body('title') title?: string,k
-    // @Body('content') content?: string,
   ) {
     return this.postsService.updatePost(id, body);
   }
