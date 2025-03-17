@@ -11,6 +11,9 @@ import { TimestampModule } from './timestamp/timestamp.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CommonModule } from './common/common.module';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { PUBLIC_PATH } from './common/const/path.const';
+import * as process from 'process';
 
 @Module({
   imports: [
@@ -36,6 +39,10 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     TimestampModule,
     CommonModule,
+    ServeStaticModule.forRoot({
+      rootPath: PUBLIC_PATH,
+      serveRoot: '/public',
+    })
   ],
   controllers: [AppController],
   providers: [

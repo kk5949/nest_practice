@@ -6,8 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  Query,
-  UseGuards,
+  Query, UploadedFile,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
@@ -16,6 +16,7 @@ import { UserDecorator } from '../user/decorators/user.decorator';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostsController {
@@ -41,7 +42,12 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
-  postPosts(@UserDecorator('id') user: number, @Body() body: CreatePostDto) {
+  async postPosts(
+    @UserDecorator('id') user: number,
+    @Body() body: CreatePostDto,
+  ) {
+    await this.postsService.createPostImage(body);
+
     return this.postsService.createPost(user, body);
   }
 
@@ -49,8 +55,6 @@ export class PostsController {
   patchPost(
     @Param('id', ParseBigintPipe) id: string,
     @Body() body: UpdatePostDto,
-    // @Body('title') title?: string,k
-    // @Body('content') content?: string,
   ) {
     return this.postsService.updatePost(id, body);
   }

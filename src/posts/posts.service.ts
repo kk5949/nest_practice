@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FindOptionsWhere, MoreThan, Repository, LessThan } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,9 @@ import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { CommonService } from '../common/common.service';
 import { ConfigService } from '@nestjs/config';
+import { POST_IMAGE_PATH, PUBLIC_FOLDER_NAME, PUBLIC_PATH, TEMP_PUBLIC_PATH } from '../common/const/path.const';
+import { join,basename } from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class PostsService {
@@ -122,11 +125,29 @@ export class PostsService {
       },
       title: body.title,
       content: body.content,
+      image: body.image,
       likeCount: 0,
       commentCount: 0,
     });
 
     return await this.postsRepository.save(post);
+  }
+
+  async createPostImage(dto: CreatePostDto){
+    //dto 이미지를 기반으로 파일 경로 생성
+    const tempFilePath = join(TEMP_PUBLIC_PATH, dto.image);
+
+    try{
+      await fs.promises.access(tempFilePath);
+    }catch(e){
+      throw new BadRequestException('파일이 존재하지 않습니다.');
+    }
+
+    const fileName = basename(tempFilePath);
+
+    const newPath = join(POST_IMAGE_PATH, fileName)
+
+    await fs.promises.rename(tempFilePath, newPath);
   }
 
   async updatePost(id: string, body: UpdatePostDto) {
