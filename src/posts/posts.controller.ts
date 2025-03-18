@@ -6,8 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  Query, UploadedFile,
-  UseGuards, UseInterceptors,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
@@ -16,7 +16,8 @@ import { UserDecorator } from '../user/decorators/user.decorator';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageType } from '../common/entities/image.entity';
+import { CreatePostImageDto } from './images/create-image.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -28,10 +29,8 @@ export class PostsController {
    * deserialization -> 역직렬화
    */
   getPosts(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Query() body: PaginatePostDto,
   ) {
-    // return this.postsService.getAllPosts();
     return this.postsService.paginatePosts(body);
   }
 
@@ -46,9 +45,19 @@ export class PostsController {
     @UserDecorator('id') user: number,
     @Body() body: CreatePostDto,
   ) {
-    await this.postsService.createPostImage(body);
+    const post =  await this.postsService.createPost(user, body);
 
-    return this.postsService.createPost(user, body);
+    // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
+    for (let i = 0; i < body.images.length; i++) {
+      // 이미지 업로드
+      await this.postsService.createPostImage(new CreatePostImageDto({
+        post,
+        path: body.images[i],
+        order: i+1,
+        type: ImageType.POST_IMAGE,
+      }));
+    }
+    return this.postsService.getPostById(post.id);
   }
 
   @Patch(':id')

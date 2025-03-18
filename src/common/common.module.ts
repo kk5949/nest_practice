@@ -9,6 +9,9 @@ import { v4 as uuid } from 'uuid';
 import { AccessTokenGuard } from '../auth/guards/bearer-token.guard';
 import { AuthModule } from '../auth/auth.module';
 import { UserModule } from '../user/user.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../user/entities/user.entity';
+import { ImageModel } from './entities/image.entity';
 
 @Module({
   controllers: [CommonController],
@@ -45,6 +48,7 @@ import { UserModule } from '../user/user.module';
         },
       }),
     }),
+    TypeOrmModule.forFeature([ImageModel])
   ]
 })
 export class CommonModule {}
