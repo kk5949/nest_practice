@@ -18,6 +18,7 @@ import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { ImageType } from '../common/entities/image.entity';
 import { PostsModel } from './entities/posts.entity';
+import { CreatePostImageDto } from './images/create-image.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -55,7 +56,7 @@ export class PostsController {
         order: i+1,
         path: body.images[i],
         type: <ImageType>ImageType.POST_IMAGE,
-      }
+      } as CreatePostImageDto
       await this.postsService.createPostImage(imageDto)
     }
     return this.postsService.getPostById(post.id);

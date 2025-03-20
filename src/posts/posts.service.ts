@@ -12,6 +12,7 @@ import { join, basename } from 'path';
 import * as fs from 'fs';
 import { CreatePostImageDto } from './images/create-image.dto';
 import { ImageModel } from '../common/entities/image.entity';
+import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 
 @Injectable()
 export class PostsService {
@@ -36,7 +37,7 @@ export class PostsService {
    */
   async paginatePosts(dto: PaginatePostDto) {
     return this.commonService.paginate(dto, this.postsRepository, {
-      relations: ['user','images'],
+      ...DEFAULT_POST_FIND_OPTIONS,
     }, 'posts');
   }
 
@@ -110,10 +111,10 @@ export class PostsService {
 
   async getPostById(id: string) {
     const post = await this.postsRepository.findOne({
+      ...DEFAULT_POST_FIND_OPTIONS,
       where: {
         id,
       },
-      relations: ['user','images'],
     });
 
     if (!post) {

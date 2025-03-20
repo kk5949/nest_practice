@@ -26,7 +26,7 @@ export class ImageModel extends TimestampModel {
   @Transform(function(params):string{
     const { value,obj } = params;
     if(obj.type === ImageType.POST_IMAGE){
-      return join(POST_PUBLIC_PATH, value);
+      return `/${join(POST_PUBLIC_PATH, value)}`;
     }else{
       return value;
     }
