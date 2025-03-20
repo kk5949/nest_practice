@@ -1,9 +1,9 @@
 import { TimestampModel } from '../../timestamp/entities/timestamp.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { join } from 'path';
-import { POST_IMAGE_PATH } from '../const/path.const';
+import { POST_PUBLIC_PATH } from '../const/path.const';
 import { PostsModel } from '../../posts/entities/posts.entity';
 
 export enum ImageType {
@@ -13,21 +13,20 @@ export enum ImageType {
 @Entity()
 export class ImageModel extends TimestampModel {
   @Column()
-  @IsInt()
+  @IsNumber()
   @IsOptional()
   order?: number;
 
   @Column({ enum: ImageType })
   @IsEnum(ImageType)
-  @IsString()
-  type: string;
+  type: ImageType;
 
   @Column()
   @IsString()
   @Transform(function(params):string{
     const { value,obj } = params;
     if(obj.type === ImageType.POST_IMAGE){
-      return join(POST_IMAGE_PATH, value);
+      return join(POST_PUBLIC_PATH, value);
     }else{
       return value;
     }

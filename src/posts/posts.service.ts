@@ -27,7 +27,7 @@ export class PostsService {
 
   async getAllPosts() {
     return this.postsRepository.find({
-      relations: ['user'],
+      relations: ['user','images'],
     });
   }
 
@@ -36,7 +36,7 @@ export class PostsService {
    */
   async paginatePosts(dto: PaginatePostDto) {
     return this.commonService.paginate(dto, this.postsRepository, {
-      relations: ['user'],
+      relations: ['user','images'],
     }, 'posts');
   }
 
@@ -113,7 +113,7 @@ export class PostsService {
       where: {
         id,
       },
-      relations: ['user'],
+      relations: ['user','images'],
     });
 
     if (!post) {

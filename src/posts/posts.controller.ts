@@ -17,7 +17,7 @@ import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { ImageType } from '../common/entities/image.entity';
-import { CreatePostImageDto } from './images/create-image.dto';
+import { PostsModel } from './entities/posts.entity';
 
 @Controller('posts')
 export class PostsController {
@@ -45,17 +45,18 @@ export class PostsController {
     @UserDecorator('id') user: number,
     @Body() body: CreatePostDto,
   ) {
-    const post =  await this.postsService.createPost(user, body);
+    const post:PostsModel =  await this.postsService.createPost(user, body);
 
     // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
     for (let i = 0; i < body.images.length; i++) {
       // 이미지 업로드
-      await this.postsService.createPostImage(new CreatePostImageDto({
-        post,
-        path: body.images[i],
+      const imageDto = {
+        post:post,
         order: i+1,
-        type: ImageType.POST_IMAGE,
-      }));
+        path: body.images[i],
+        type: <ImageType>ImageType.POST_IMAGE,
+      }
+      await this.postsService.createPostImage(imageDto)
     }
     return this.postsService.getPostById(post.id);
   }
@@ -69,7 +70,7 @@ export class PostsController {
   }
 
   @Delete(':id')
-  deletePost(@Param('id', ParseBigintPipe) id: string) {
-    this.postsService.deletePost(id);
+  async deletePost(@Param('id', ParseBigintPipe) id: string) {
+    await this.postsService.deletePost(id);
   }
 }
