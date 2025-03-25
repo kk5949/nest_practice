@@ -8,6 +8,7 @@ import { UserModule } from '../user/user.module';
 import { CommonService } from '../common/common.service';
 import { CommonModule } from '../common/common.module';
 import { ImageModel } from '../common/entities/image.entity';
+import { PostsImagesService } from './images.service';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { ImageModel } from '../common/entities/image.entity';
     ImageModel,
   ],
   controllers: [PostsController],
-  providers: [PostsService, CommonService],
+  providers: [PostsService, CommonService, PostsImagesService],
 })
 export class PostsModule {
 }

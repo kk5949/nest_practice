@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { FindOptionsWhere, MoreThan, Repository, LessThan } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { FindOptionsWhere, MoreThan, Repository, LessThan, QueryRunner } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post';
@@ -7,10 +7,6 @@ import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { CommonService } from '../common/common.service';
 import { ConfigService } from '@nestjs/config';
-import { POST_IMAGE_PATH, TEMP_PUBLIC_PATH } from '../common/const/path.const';
-import { join, basename } from 'path';
-import * as fs from 'fs';
-import { CreatePostImageDto } from './images/create-image.dto';
 import { ImageModel } from '../common/entities/image.entity';
 import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 
@@ -124,8 +120,13 @@ export class PostsService {
     return post;
   }
 
-  async createPost(user: number, body: CreatePostDto) {
-    const post = this.postsRepository.create({
+  getPostRepository(queryRunner?: QueryRunner) {
+    return queryRunner ? queryRunner.manager.getRepository(PostsModel) : this.postsRepository
+  }
+
+  async createPost(user: number, body: CreatePostDto, queryRunner?: QueryRunner) {
+    const repository = this.getPostRepository(queryRunner);
+    const post = repository.create({
       user: {
         id: user,
       },
@@ -136,35 +137,10 @@ export class PostsService {
       commentCount: 0,
     });
 
-    return await this.postsRepository.save(post);
+    return await repository.save(post);
   }
 
-  async createPostImage(dto: CreatePostImageDto) {
-    //dto 이미지를 기반으로 파일 경로 생성
-    //반복문으로 image 처리
-    const tempFilePath = join(TEMP_PUBLIC_PATH, dto.path);
-    // 트랜잭션 처리
-    try {
-      await fs.promises.access(tempFilePath);
-    } catch (e) {
-      console.log(e);
-      throw new BadRequestException('파일이 존재하지 않습니다.');
-    }
 
-    const fileName = basename(tempFilePath);
-
-    const newPath = join(POST_IMAGE_PATH, fileName);
-
-    //파일이동 전 이미지 객체 생성
-    const result = this.imageRepository.save({
-      ...dto
-    })
-
-    //파일 이동 (temp -> post folder)
-    await fs.promises.rename(tempFilePath, newPath);
-
-    return result;
-  }
 
   async updatePost(id: string, body: UpdatePostDto) {
     const { title, content } = body;

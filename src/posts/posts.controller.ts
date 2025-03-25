@@ -19,10 +19,16 @@ import { PaginatePostDto } from './dto/paginate-post.dto';
 import { ImageType } from '../common/entities/image.entity';
 import { PostsModel } from './entities/posts.entity';
 import { CreatePostImageDto } from './images/create-image.dto';
+import { DataSource } from 'typeorm';
+import { PostsImagesService } from './images.service';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly postsImagesService: PostsImagesService,
+    private readonly dataSource: DataSource
+  ) {}
 
   @Get()
   /**
@@ -46,20 +52,34 @@ export class PostsController {
     @UserDecorator('id') user: number,
     @Body() body: CreatePostDto,
   ) {
-    const post:PostsModel =  await this.postsService.createPost(user, body);
 
-    // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
-    for (let i = 0; i < body.images.length; i++) {
-      // 이미지 업로드
-      const imageDto = {
-        post:post,
-        order: i+1,
-        path: body.images[i],
-        type: <ImageType>ImageType.POST_IMAGE,
-      } as CreatePostImageDto
-      await this.postsService.createPostImage(imageDto)
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try{
+      const post:PostsModel =  await this.postsService.createPost(user, body);
+
+      // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
+      for (let i = 0; i < body.images.length; i++) {
+        // 이미지 업로드
+        const imageDto = {
+          post:post,
+          order: i+1,
+          path: body.images[i],
+          type: <ImageType>ImageType.POST_IMAGE,
+        } as CreatePostImageDto
+        await this.postsImagesService.createPostImage(imageDto, queryRunner)
+      }
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return this.postsService.getPostById(post.id);
+    }catch(e){
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw e;
     }
-    return this.postsService.getPostById(post.id);
   }
 
   @Patch(':id')
