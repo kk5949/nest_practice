@@ -60,8 +60,8 @@ $ npm run test:cov
 
 ## TODO Practice List
 - ~~Config Module 적용~~
-- File Uploader
-- DB Transaction
+- ~~File Uploader~~
+- ~~DB Transaction~~
 - Interceptor 적용
 - Exception Filter 
 - Middleware 

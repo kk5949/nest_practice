@@ -6,8 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  Query, UploadedFile,
-  UseGuards, UseInterceptors,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
@@ -16,11 +16,19 @@ import { UserDecorator } from '../user/decorators/user.decorator';
 import { CreatePostDto } from './dto/create-post';
 import { UpdatePostDto } from './dto/update-post';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageType } from '../common/entities/image.entity';
+import { PostsModel } from './entities/posts.entity';
+import { CreatePostImageDto } from './images/create-image.dto';
+import { DataSource } from 'typeorm';
+import { PostsImagesService } from './images.service';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly postsImagesService: PostsImagesService,
+    private readonly dataSource: DataSource
+  ) {}
 
   @Get()
   /**
@@ -28,10 +36,8 @@ export class PostsController {
    * deserialization -> 역직렬화
    */
   getPosts(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @Query() body: PaginatePostDto,
   ) {
-    // return this.postsService.getAllPosts();
     return this.postsService.paginatePosts(body);
   }
 
@@ -46,9 +52,34 @@ export class PostsController {
     @UserDecorator('id') user: number,
     @Body() body: CreatePostDto,
   ) {
-    await this.postsService.createPostImage(body);
 
-    return this.postsService.createPost(user, body);
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try{
+      const post:PostsModel =  await this.postsService.createPost(user, body);
+
+      // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
+      for (let i = 0; i < body.images.length; i++) {
+        // 이미지 업로드
+        const imageDto = {
+          post:post,
+          order: i+1,
+          path: body.images[i],
+          type: <ImageType>ImageType.POST_IMAGE,
+        } as CreatePostImageDto
+        await this.postsImagesService.createPostImage(imageDto, queryRunner)
+      }
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return this.postsService.getPostById(post.id);
+    }catch(e){
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+      throw e;
+    }
   }
 
   @Patch(':id')
@@ -60,7 +91,7 @@ export class PostsController {
   }
 
   @Delete(':id')
-  deletePost(@Param('id', ParseBigintPipe) id: string) {
-    this.postsService.deletePost(id);
+  async deletePost(@Param('id', ParseBigintPipe) id: string) {
+    await this.postsService.deletePost(id);
   }
 }

@@ -1,4 +1,6 @@
 import { join } from 'path';
+import * as process from 'process';
+
 
 export const PROJECT_ROOT_PATH = process.cwd();
 export const PUBLIC_FOLDER_NAME = 'public';

@@ -14,6 +14,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PUBLIC_PATH } from './common/const/path.const';
 import * as process from 'process';
+import { ImageModel } from './common/entities/image.entity';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import * as process from 'process';
       username: process.env['DB_USERNAME'],
       password: process.env['DB_PASSWORD'],
       database: process.env['DB_DATABASE'],
-      entities: [PostsModel, User],
+      entities: [PostsModel, User, ImageModel],
       synchronize: true,
       // logging: true,
     }),
