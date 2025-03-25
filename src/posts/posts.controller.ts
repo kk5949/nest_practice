@@ -2,12 +2,12 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
+  Get, InternalServerErrorException,
   Param,
   Patch,
   Post,
   Query,
-  UseGuards,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { ParseBigintPipe } from '../pipes/parse-bigint-pipe';
@@ -19,16 +19,18 @@ import { PaginatePostDto } from './dto/paginate-post.dto';
 import { ImageType } from '../common/entities/image.entity';
 import { PostsModel } from './entities/posts.entity';
 import { CreatePostImageDto } from './images/create-image.dto';
-import { DataSource } from 'typeorm';
+import { QueryRunner } from 'typeorm';
 import { PostsImagesService } from './images.service';
+import { TransactionInterceptor } from '../interceptors/transaction.interceptor';
+import { QueryRunnerDecorator } from '../common/decorators/query-runner.decorator';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly postsImagesService: PostsImagesService,
-    private readonly dataSource: DataSource
-  ) {}
+  ) {
+  }
 
   @Get()
   /**
@@ -48,38 +50,28 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
   async postPosts(
     @UserDecorator('id') user: number,
+    @QueryRunnerDecorator() qr: QueryRunner,
     @Body() body: CreatePostDto,
   ) {
+    const post: PostsModel = await this.postsService.createPost(user, body, qr);
 
-    const queryRunner = this.dataSource.createQueryRunner();
+    // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
+    for (let i = 0; i < body.images.length; i++) {
+      // 이미지 업로드
+      const imageDto = {
+        post: post,
+        order: i + 1,
+        path: body.images[i],
+        type: <ImageType>ImageType.POST_IMAGE,
+      } as CreatePostImageDto;
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try{
-      const post:PostsModel =  await this.postsService.createPost(user, body);
-
-      // 이미지 갯수에 따라 반복문 처리, 인덱스를 order로사용
-      for (let i = 0; i < body.images.length; i++) {
-        // 이미지 업로드
-        const imageDto = {
-          post:post,
-          order: i+1,
-          path: body.images[i],
-          type: <ImageType>ImageType.POST_IMAGE,
-        } as CreatePostImageDto
-        await this.postsImagesService.createPostImage(imageDto, queryRunner)
-      }
-      await queryRunner.commitTransaction();
-      await queryRunner.release();
-      return this.postsService.getPostById(post.id);
-    }catch(e){
-      await queryRunner.rollbackTransaction();
-      await queryRunner.release();
-      throw e;
+      //request 객체에 담긴 queryRunner를 사용하여 트랜잭션 처리
+      await this.postsImagesService.createPostImage(imageDto, qr);
     }
+    return this.postsService.getPostById(post.id, qr);
   }
 
   @Patch(':id')
