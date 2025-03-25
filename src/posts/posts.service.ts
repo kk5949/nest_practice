@@ -171,6 +171,6 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
 
-    return await this.postsRepository.delete(post);
+    return await this.postsRepository.delete(post.id);
   }
 }
