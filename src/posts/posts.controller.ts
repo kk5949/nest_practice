@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,7 +7,7 @@ import {
   Param,
   Patch,
   Post,
-  Query,
+  Query, UseFilters,
   UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -23,6 +24,7 @@ import { QueryRunner } from 'typeorm';
 import { PostsImagesService } from './images.service';
 import { TransactionInterceptor } from '../interceptors/transaction.interceptor';
 import { QueryRunnerDecorator } from '../common/decorators/query-runner.decorator';
+import { HttpExceptionFilter } from '../exception-filters/http.exception';
 
 @Controller('posts')
 export class PostsController {
@@ -33,6 +35,7 @@ export class PostsController {
   }
 
   @Get()
+  @UseFilters(HttpExceptionFilter)
   /**
    * serialization -> 직렬화 -> Nestjs 에서 사용하는 데이터 구조를 다른시스템에서도 쉽게 사용 가능하도록 포맷 변환
    * deserialization -> 역직렬화
@@ -40,6 +43,7 @@ export class PostsController {
   getPosts(
     @Query() body: PaginatePostDto,
   ) {
+    // throw new BadRequestException('테스트');
     return this.postsService.paginatePosts(body);
   }
 
