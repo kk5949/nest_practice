@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
@@ -15,6 +15,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { PUBLIC_PATH } from './common/const/path.const';
 import * as process from 'process';
 import { ImageModel } from './common/entities/image.entity';
+import { ThrottleMiddleware } from './middlewares/throttle.middleware';
 
 @Module({
   imports: [
@@ -54,4 +55,9 @@ import { ImageModel } from './common/entities/image.entity';
     }
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+  // ThrottleMiddleware 전역 적용
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ThrottleMiddleware).forRoutes('*');
+  }
+}
