@@ -16,6 +16,7 @@ import { PUBLIC_PATH } from './common/const/path.const';
 import * as process from 'process';
 import { ImageModel } from './common/entities/image.entity';
 import { ThrottleMiddleware } from './middlewares/throttle.middleware';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { ThrottleMiddleware } from './middlewares/throttle.middleware';
     ServeStaticModule.forRoot({
       rootPath: PUBLIC_PATH,
       serveRoot: '/public',
-    })
+    }),
+    ChatsModule
   ],
   controllers: [AppController],
   providers: [
